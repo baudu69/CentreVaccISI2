@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from Centre.Serializer import VaccinSerializer
-from Centre.models import Vaccin
+from Centre.Serializer import VaccinSerializer, LotSerializer
+from Centre.models import Vaccin, Lot
 
 
 @api_view(['GET', 'POST', 'DELETE'])
@@ -22,6 +22,22 @@ def vaccin_list(request):
         vaccin_serializer = VaccinSerializer(lesVaccins, many=True)
         return JsonResponse(vaccin_serializer.data, safe=False)
 
+@api_view(['GET'])
+def lot_liste(request, pk):
+    lesLots = Lot.objects.filter(Vaccin=pk)
+    if request.method == 'GET':
+        lot_serializer = LotSerializer(lesLots, many=True)
+        return JsonResponse(lot_serializer.data, safe=False)
+
+@api_view(['POST'])
+def lot_detail(request):
+    if request.method == 'POST':
+        lot_data = JSONParser().parse(request)
+        lot_serializer = LotSerializer(data=lot_data)
+        if lot_serializer.is_valid():
+            lot_serializer.save()
+            return JsonResponse(lot_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(lot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def vaccin_detail(request, pk):
@@ -31,7 +47,7 @@ def vaccin_detail(request, pk):
             vaccin_serializer = VaccinSerializer(unVaccin)
             return JsonResponse(vaccin_serializer.data, safe=False)
         except Vaccin.DoesNotExist:
-            return JsonResponse({'message': 'The tutorial does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message': 'Ce vaccin n\'existe pas'}, status=status.HTTP_404_NOT_FOUND)
     elif request.method == 'PUT':
         vaccin_data = JSONParser().parse(request)
         vaccin_serializer = VaccinSerializer(unVaccin, data=vaccin_data)
@@ -41,4 +57,4 @@ def vaccin_detail(request, pk):
         return JsonResponse(vaccin_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
         unVaccin.delete()
-        return JsonResponse({'message': 'Tutorial was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({'message': 'Vaccin supprime'}, status=status.HTTP_204_NO_CONTENT)
