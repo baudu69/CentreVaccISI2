@@ -7,4 +7,5 @@ urlpatterns = [
     url(r'^api/vaccin/(?P<pk>[0-9]+)$', views.vaccin_detail),
     url(r'^api/vaccin/(?P<pk>[0-9]+)/lot$', views.lot_liste),
     url(r'^api/lot$', views.lot_detail),
+    url(r'^api/creneau/(?P<vaccin_id>[0-9]+)$', views.creneau_list),
 ]

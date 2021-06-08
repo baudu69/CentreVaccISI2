@@ -9,15 +9,16 @@ from rest_framework.parsers import JSONParser
 from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer
 from Centre.models import Vaccin, Lot, Creneau
 
-#TODO: refaire pour recuperer la liste des creneaux a partir d'un id vaccin
+
 @api_view(['GET'])
 def creneau_list(request, vaccin_id):
-    lesCreneaux = Creneau.objects.filter(vaccin_id)
+    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id)
     title = request.GET.get('title', None)
     if title is not None:
         lesCreneaux = lesCreneaux.filter(title__icontains=title)
     creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
     return JsonResponse(creneau_serializer.data, safe=False)
+
 
 @api_view(['GET', 'POST', 'DELETE'])
 def creneau_detail(request, pk):
@@ -52,12 +53,14 @@ def vaccin_list(request):
         vaccin_serializer = VaccinSerializer(lesVaccins, many=True)
         return JsonResponse(vaccin_serializer.data, safe=False)
 
+
 @api_view(['GET'])
 def lot_liste(request, pk):
     lesLots = Lot.objects.filter(Vaccin=pk)
     if request.method == 'GET':
         lot_serializer = LotSerializer(lesLots, many=True)
         return JsonResponse(lot_serializer.data, safe=False)
+
 
 @api_view(['POST'])
 def lot_detail(request):
@@ -68,6 +71,7 @@ def lot_detail(request):
             lot_serializer.save()
             return JsonResponse(lot_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(lot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def vaccin_detail(request, pk):
