@@ -8,10 +8,13 @@ from rest_framework.parsers import JSONParser
 
 from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer
 from Centre.models import Vaccin, Lot, Creneau
+from django.contrib.auth.middleware import get_user
 
 
 @api_view(['GET'])
 def creneau_list(request, vaccin_id):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id)
     title = request.GET.get('title', None)
     if title is not None:
@@ -22,6 +25,8 @@ def creneau_list(request, vaccin_id):
 
 @api_view(['GET', 'POST', 'DELETE'])
 def creneau_detail(request, pk):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     unCreneau = Creneau.objects.get(pk=pk)
     if request.method == 'GET':
         try:
@@ -43,6 +48,8 @@ def creneau_detail(request, pk):
 
 @api_view(['GET', 'POST', 'DELETE'])
 def vaccin_list(request):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':
         lesVaccins = Vaccin.objects.all()
 
@@ -56,6 +63,8 @@ def vaccin_list(request):
 
 @api_view(['GET'])
 def lot_liste(request, pk):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     lesLots = Lot.objects.filter(Vaccin=pk)
     if request.method == 'GET':
         lot_serializer = LotSerializer(lesLots, many=True)
@@ -64,6 +73,8 @@ def lot_liste(request, pk):
 
 @api_view(['POST'])
 def lot_detail(request):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'POST':
         lot_data = JSONParser().parse(request)
         lot_serializer = LotSerializer(data=lot_data)
@@ -75,6 +86,8 @@ def lot_detail(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def vaccin_detail(request, pk):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     unVaccin = Vaccin.objects.get(pk=pk)
     if request.method == 'GET':
         try:
