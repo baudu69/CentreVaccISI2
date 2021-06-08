@@ -9,10 +9,10 @@ from rest_framework.parsers import JSONParser
 from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer
 from Centre.models import Vaccin, Lot, Creneau
 
-
+#TODO: refaire pour recuperer la liste des creneaux a partir d'un id vaccin
 @api_view(['GET'])
-def creneau_list(request):
-    lesCreneaux = Creneau.objects.all()
+def creneau_list(request, vaccin_id):
+    lesCreneaux = Creneau.objects.filter(vaccin_id)
     title = request.GET.get('title', None)
     if title is not None:
         lesCreneaux = lesCreneaux.filter(title__icontains=title)
