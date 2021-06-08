@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from Centre.models import Vaccin, Lot
+from Centre.models import Vaccin, Lot, Creneau
 
 
 class VaccinSerializer(serializers.ModelSerializer):
@@ -19,3 +19,13 @@ class LotSerializer(serializers.ModelSerializer):
                   'QuantiteLot',
                   'QteRestante',
                   'Vaccin')
+
+
+class CreneauSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Creneau
+        fields = ('id',
+                  'dateCreneau',
+                  'LotUtilise',
+                  'Patient',
+                  'Pratiquant')

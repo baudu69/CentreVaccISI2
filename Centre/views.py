@@ -6,8 +6,38 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from Centre.Serializer import VaccinSerializer, LotSerializer
-from Centre.models import Vaccin, Lot
+from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer
+from Centre.models import Vaccin, Lot, Creneau
+
+
+@api_view(['GET'])
+def creneau_list(request):
+    lesCreneaux = Creneau.objects.all()
+    title = request.GET.get('title', None)
+    if title is not None:
+        lesCreneaux = lesCreneaux.filter(title__icontains=title)
+    creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
+    return JsonResponse(creneau_serializer.data, safe=False)
+
+@api_view(['GET', 'POST', 'DELETE'])
+def creneau_detail(request, pk):
+    unCreneau = Creneau.objects.get(pk=pk)
+    if request.method == 'GET':
+        try:
+            creneau_serializer = CreneauSerializer(unCreneau)
+            return JsonResponse(creneau_serializer.data, safe=False)
+        except Creneau.DoesNotExist:
+            return JsonResponse({'message': 'Ce creneau n\'existe pas'}, status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'POST':
+        creneau_data = JSONParser().parse(request)
+        creneau_serializer = CreneauSerializer(data=creneau_data)
+        if creneau_serializer.is_valid():
+            creneau_serializer.save()
+            return JsonResponse(creneau_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(creneau_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        unCreneau.delete()
+        return JsonResponse({'message': 'Creneau supprime'}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'POST', 'DELETE'])
