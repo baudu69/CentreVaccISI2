@@ -5,22 +5,45 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer
-from Centre.models import Vaccin, Lot, Creneau
+from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer, UserSerializer
+from Centre.models import Vaccin, Lot, Creneau, Patient
 from django.contrib.auth.middleware import get_user
 
+from Tentative2CentreVacc.middleware import JWTAuthenticationInMiddleware
+
+
+@JWTAuthenticationInMiddleware
+@api_view(['POST'])
+def inscription(request):
+    user_data = JSONParser().parse(request)
+    user_serializer = UserSerializer(data=user_data)
+    if user_serializer.is_valid():
+        user_serializer.save()
+        return JsonResponse(user_serializer.data, status=status.HTTP_201_CREATED)
+    return JsonResponse(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def creneau_list(request, vaccin_id):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
-    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id)
+    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id, Patient__creneau__isnull=True)
     title = request.GET.get('title', None)
     if title is not None:
         lesCreneaux = lesCreneaux.filter(title__icontains=title)
     creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
     return JsonResponse(creneau_serializer.data, safe=False)
+
+@api_view(['GET'])
+def mesCreneaux_list(request):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'GET':
+        lesCreneaux = Creneau.objects.filter(Patient__creneau=request.user.id)
+        creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
+        return JsonResponse(creneau_serializer.data, safe=False)
+
 
 
 @api_view(['GET', 'POST', 'DELETE'])
@@ -71,6 +94,8 @@ def lot_liste(request, pk):
         return JsonResponse(lot_serializer.data, safe=False)
 
 
+
+
 @api_view(['POST'])
 def lot_detail(request):
     if request.user is None:
@@ -82,6 +107,40 @@ def lot_detail(request):
             lot_serializer.save()
             return JsonResponse(lot_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(lot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def reserverCreneau(request, idCreneau):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
+    leCreneau = Creneau.objects.get(pk=idCreneau)
+    leCreneau.Patient = Patient.objects.get(pk=request.user.id)
+    leCreneau.save()
+    return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def annulerCreneau(request, idCreneau):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
+    leCreneau = Creneau.objects.get(pk=idCreneau)
+    leCreneau.Patient = None
+    leCreneau.save()
+    return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+
+@api_view(['PUT'])
+def detail_creneau(request):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
+    if request.method == 'PUT':
+        creneau_data = JSONParser().parse(request)
+        creneau_serializer = CreneauSerializer(data=creneau_data)
+        leLot = Lot.objects.get(pk=creneau_serializer.data.get('id'))
+        leLot.QteRestante = leLot.QteRestante.real - 1
+        leLot.save()
+        if creneau_serializer.is_valid():
+            creneau_serializer.save()
+
+        return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -105,3 +164,13 @@ def vaccin_detail(request, pk):
     elif request.method == 'DELETE':
         unVaccin.delete()
         return JsonResponse({'message': 'Vaccin supprime'}, status=status.HTTP_204_NO_CONTENT)
+
+
+def get_jwt_user(request):
+    user = get_user(request)
+    if user.is_authenticated:
+        return user
+    jwt_authentication = JSONWebTokenAuthentication()
+    if jwt_authentication.get_jwt_value(request):
+        user, jwt = jwt_authentication.authenticate(request)
+    return user
