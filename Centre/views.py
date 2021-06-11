@@ -134,13 +134,14 @@ def detail_creneau(request):
     if request.method == 'PUT':
         creneau_data = JSONParser().parse(request)
         creneau_serializer = CreneauSerializer(data=creneau_data)
-        leLot = Lot.objects.get(pk=creneau_serializer.data.get('id'))
-        leLot.QteRestante = leLot.QteRestante.real - 1
-        leLot.save()
         if creneau_serializer.is_valid():
             creneau_serializer.save()
-
-        return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+            lotUtilise = creneau_serializer.data.get('LotUtilise')
+            leLot = Lot.objects.get(pk=lotUtilise)
+            leLot.QteRestante = leLot.QteRestante.real - 1
+            leLot.save()
+            return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+        return JsonResponse({'message': 'pasOK'}, status=status.HTTP_304_NOT_MODIFIED)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

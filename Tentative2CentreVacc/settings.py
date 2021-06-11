@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'Centre.apps.CentreConfig',
     'corsheaders',
+    'shortcircuit'
 ]
 
 REST_FRAMEWORK = {
@@ -56,6 +57,8 @@ JWT_AUTH = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'shortcircuit.middleware.ShortcutCircuit',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -64,9 +67,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
+
+SHORTCIRCUIT_URL_PATTERNS = (r'^api/inscription', r'^/also_me')
+
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:8081',
