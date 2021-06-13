@@ -47,10 +47,11 @@ def inscription(request):
 
 
 @api_view(['GET'])
-def creneau_list(request, vaccin_id):
+def creneau_list(request, vaccin_id=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
-    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id, Patient__creneau__isnull=True, Pratiquant__creneau__isnull=True)
+    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id, Patient__creneau__isnull=True,
+                                         Pratiquant__creneau__isnull=True)
     title = request.GET.get('title', None)
     if title is not None:
         lesCreneaux = lesCreneaux.filter(title__icontains=title)
@@ -70,7 +71,7 @@ def mesCreneaux_list(request):
 
 
 @api_view(['GET', 'POST', 'DELETE'])
-def creneau_detail(request, pk):
+def creneau_detail(request, pk=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     unCreneau = Creneau.objects.get(pk=pk)
@@ -108,7 +109,7 @@ def vaccin_list(request):
 
 
 @api_view(['GET'])
-def lot_liste(request, pk):
+def lot_liste(request, pk=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     lesLots = Lot.objects.filter(Vaccin=pk)
@@ -118,7 +119,7 @@ def lot_liste(request, pk):
 
 
 @api_view(['POST', 'GET'])
-def lot_detail(request, pk):
+def lot_detail(request, pk=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'POST':
@@ -135,7 +136,7 @@ def lot_detail(request, pk):
 
 
 @api_view(['GET'])
-def patient_detail(request, pk):
+def patient_detail(request, pk=''):
     if request.method == 'GET':
         lePatient = Patient.objects.get(pk=pk)
         patient_serializer = PatientSerializer(lePatient, many=False)
@@ -143,7 +144,7 @@ def patient_detail(request, pk):
 
 
 @api_view(['GET'])
-def reserverCreneau(request, idCreneau):
+def reserverCreneau(request, idCreneau=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     leCreneau = Creneau.objects.get(pk=idCreneau)
@@ -154,7 +155,7 @@ def reserverCreneau(request, idCreneau):
 
 
 @api_view(['GET'])
-def annulerCreneau(request, idCreneau):
+def annulerCreneau(request, idCreneau=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     leCreneau = Creneau.objects.get(pk=idCreneau)
@@ -162,8 +163,9 @@ def annulerCreneau(request, idCreneau):
     leCreneau.save()
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
-def validerCreneau(request, idCreneau):
+def validerCreneau(request, idCreneau=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     lePratiquant = Pratiquant.objects.filter(user_id=request.user.id).first()
@@ -174,7 +176,7 @@ def validerCreneau(request, idCreneau):
 
 
 @api_view(['PUT', 'GET'])
-def detail_creneau(request, idCreneau):
+def detail_creneau(request, idCreneau=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'PUT':
@@ -195,7 +197,7 @@ def detail_creneau(request, idCreneau):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def vaccin_detail(request, pk):
+def vaccin_detail(request, pk=''):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     unVaccin = Vaccin.objects.get(pk=pk)

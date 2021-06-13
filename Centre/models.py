@@ -61,7 +61,7 @@ class EnregistrerEffet(models.Model):
 class Creneau(models.Model):
     dateCreneau = models.DateTimeField(auto_now=False)
     LotUtilise = models.ForeignKey(Lot, on_delete=models.CASCADE)
-    Patient = models.ForeignKey(Patient, null=True,  on_delete=models.CASCADE)
+    Patient = models.ForeignKey(Patient, null=True, on_delete=models.CASCADE)
     Pratiquant = models.ForeignKey(Pratiquant, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
