@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer, UserSerializer, PatientSerializer
-from Centre.models import Vaccin, Lot, Creneau, Patient
+from Centre.models import Vaccin, Lot, Creneau, Patient, Pratiquant
 from django.contrib.auth.middleware import get_user
 
 from Tentative2CentreVacc.middleware import JWTAuthenticationInMiddleware
@@ -50,7 +50,7 @@ def inscription(request):
 def creneau_list(request, vaccin_id):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
-    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id, Patient__creneau__isnull=True)
+    lesCreneaux = Creneau.objects.filter(LotUtilise__Vaccin_id=vaccin_id, Patient__creneau__isnull=True, Pratiquant__creneau__isnull=True)
     title = request.GET.get('title', None)
     if title is not None:
         lesCreneaux = lesCreneaux.filter(title__icontains=title)
@@ -63,7 +63,8 @@ def mesCreneaux_list(request):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'GET':
-        lesCreneaux = Creneau.objects.filter(Patient__creneau=request.user.id)
+        lePatient = Patient.objects.filter(user_id=request.user.id).first()
+        lesCreneaux = Creneau.objects.filter(Patient=lePatient.id)
         creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
         return JsonResponse(creneau_serializer.data, safe=False)
 
@@ -132,6 +133,7 @@ def lot_detail(request, pk):
         lot_serializer = LotSerializer(leLot, many=False)
         return JsonResponse(lot_serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def patient_detail(request, pk):
     if request.method == 'GET':
@@ -139,12 +141,14 @@ def patient_detail(request, pk):
         patient_serializer = PatientSerializer(lePatient, many=False)
         return JsonResponse(patient_serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def reserverCreneau(request, idCreneau):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     leCreneau = Creneau.objects.get(pk=idCreneau)
-    leCreneau.Patient = Patient.objects.get(pk=request.user.id)
+    lePatient = Patient.objects.filter(user_id=request.user.id).first()
+    leCreneau.Patient = Patient.objects.get(pk=lePatient.id)
     leCreneau.save()
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 
@@ -155,6 +159,16 @@ def annulerCreneau(request, idCreneau):
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     leCreneau = Creneau.objects.get(pk=idCreneau)
     leCreneau.Patient = None
+    leCreneau.save()
+    return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def validerCreneau(request, idCreneau):
+    if request.user is None:
+        return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
+    lePratiquant = Pratiquant.objects.filter(user_id=request.user.id).first()
+    leCreneau = Creneau.objects.get(pk=idCreneau)
+    leCreneau.Pratiquant = Pratiquant.objects.get(pk=lePratiquant.id)
     leCreneau.save()
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 

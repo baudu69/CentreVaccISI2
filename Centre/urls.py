@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^api/creneau/detail$', views.detail_creneau),
     url(r'^api/creneau/reserver/(?P<idCreneau>[0-9]+)$', views.reserverCreneau),
     url(r'^api/creneau/annuler/(?P<idCreneau>[0-9]+)$', views.annulerCreneau),
+    url(r'^api/creneau/valider/(?P<idCreneau>[0-9]+)$', views.validerCreneau),
     url(r'^api/creneau/id/(?P<idCreneau>[0-9]+)$', views.detail_creneau),
     url(r'^api/creneau/mesCreneaux$', views.mesCreneaux_list),
     url(r'^api/creneauPratiquant$', views.creneauPraticien),
