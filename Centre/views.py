@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render
 
@@ -5,6 +6,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
+from rest_framework.permissions import AllowAny
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer, UserSerializer
@@ -14,15 +16,25 @@ from django.contrib.auth.middleware import get_user
 from Tentative2CentreVacc.middleware import JWTAuthenticationInMiddleware
 
 
-@JWTAuthenticationInMiddleware
+# Regler prblm mdp + ajouter patient
 @api_view(['POST'])
 def inscription(request):
     user_data = JSONParser().parse(request)
     user_serializer = UserSerializer(data=user_data)
     if user_serializer.is_valid():
         user_serializer.save()
-        return JsonResponse(user_serializer.data, status=status.HTTP_201_CREATED)
+        unUser = User.objects.latest('id')
+        unUser.set_password(unUser.password)
+        unPatient = Patient()
+        unPatient.MailPatient = unUser.email
+        unPatient.Nom = unUser.last_name
+        unPatient.Prenom = unUser.first_name
+        unPatient.user_id = unUser.id
+        unPatient.save()
+        unUser.save()
+        return JsonResponse({'message': 'Utilisateur Cree'}, status=status.HTTP_201_CREATED)
     return JsonResponse(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def creneau_list(request, vaccin_id):
@@ -35,6 +47,7 @@ def creneau_list(request, vaccin_id):
     creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
     return JsonResponse(creneau_serializer.data, safe=False)
 
+
 @api_view(['GET'])
 def mesCreneaux_list(request):
     if request.user is None:
@@ -43,7 +56,6 @@ def mesCreneaux_list(request):
         lesCreneaux = Creneau.objects.filter(Patient__creneau=request.user.id)
         creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
         return JsonResponse(creneau_serializer.data, safe=False)
-
 
 
 @api_view(['GET', 'POST', 'DELETE'])
@@ -94,8 +106,6 @@ def lot_liste(request, pk):
         return JsonResponse(lot_serializer.data, safe=False)
 
 
-
-
 @api_view(['POST'])
 def lot_detail(request):
     if request.user is None:
@@ -118,6 +128,7 @@ def reserverCreneau(request, idCreneau):
     leCreneau.save()
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def annulerCreneau(request, idCreneau):
     if request.user is None:
@@ -126,6 +137,7 @@ def annulerCreneau(request, idCreneau):
     leCreneau.Patient = None
     leCreneau.save()
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
+
 
 @api_view(['PUT'])
 def detail_creneau(request):

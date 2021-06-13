@@ -8,7 +8,6 @@ class Patient(models.Model):
     Nom = models.CharField(max_length=75)
     Prenom = models.CharField(max_length=75)
     MailPatient = models.CharField(max_length=75)
-    TelPatient = models.CharField(max_length=75)
 
     def __str__(self):
         return "%s %s", (self.Nom, self.Prenom)

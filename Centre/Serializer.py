@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from Centre.models import Vaccin, Lot, Creneau
 
@@ -33,7 +34,7 @@ class CreneauSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Creneau
+        model = User
         fields = ('id',
                   'username',
                   'password',
