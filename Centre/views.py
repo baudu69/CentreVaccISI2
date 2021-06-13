@@ -9,11 +9,21 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer, UserSerializer
+from Centre.Serializer import VaccinSerializer, LotSerializer, CreneauSerializer, UserSerializer, PatientSerializer
 from Centre.models import Vaccin, Lot, Creneau, Patient
 from django.contrib.auth.middleware import get_user
 
 from Tentative2CentreVacc.middleware import JWTAuthenticationInMiddleware
+
+
+@api_view(['GET'])
+def creneauPraticien(request):
+    lesCreneaux = Creneau.objects.filter(Patient__creneau__isnull=False, Pratiquant__creneau__isnull=True)
+    title = request.GET.get('title', None)
+    if title is not None:
+        lesCreneaux = lesCreneaux.filter(title__icontains=title).order_by('dateCreneau')
+    creneau_serializer = CreneauSerializer(lesCreneaux, many=True)
+    return JsonResponse(creneau_serializer.data, safe=False)
 
 
 # Regler prblm mdp + ajouter patient
@@ -32,7 +42,7 @@ def inscription(request):
         unPatient.user_id = unUser.id
         unPatient.save()
         unUser.save()
-        return JsonResponse({'message': 'Utilisateur Cree'}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'message': 'OK'}, status=status.HTTP_201_CREATED)
     return JsonResponse(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -106,8 +116,8 @@ def lot_liste(request, pk):
         return JsonResponse(lot_serializer.data, safe=False)
 
 
-@api_view(['POST'])
-def lot_detail(request):
+@api_view(['POST', 'GET'])
+def lot_detail(request, pk):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'POST':
@@ -117,7 +127,17 @@ def lot_detail(request):
             lot_serializer.save()
             return JsonResponse(lot_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(lot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        leLot = Lot.objects.get(pk=pk)
+        lot_serializer = LotSerializer(leLot, many=False)
+        return JsonResponse(lot_serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+def patient_detail(request, pk):
+    if request.method == 'GET':
+        lePatient = Patient.objects.get(pk=pk)
+        patient_serializer = PatientSerializer(lePatient, many=False)
+        return JsonResponse(patient_serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def reserverCreneau(request, idCreneau):
@@ -139,8 +159,8 @@ def annulerCreneau(request, idCreneau):
     return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
 
 
-@api_view(['PUT'])
-def detail_creneau(request):
+@api_view(['PUT', 'GET'])
+def detail_creneau(request, idCreneau):
     if request.user is None:
         return JsonResponse({'message': 'Vous n\'etes pas connecte'}, status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'PUT':
@@ -154,6 +174,10 @@ def detail_creneau(request):
             leLot.save()
             return JsonResponse({'message': 'OK'}, status=status.HTTP_200_OK)
         return JsonResponse({'message': 'pasOK'}, status=status.HTTP_304_NOT_MODIFIED)
+    elif request.method == 'GET':
+        leCreneau = Creneau.objects.get(pk=idCreneau)
+        leCreneauSerializer = CreneauSerializer(leCreneau, many=False)
+        return JsonResponse(leCreneauSerializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

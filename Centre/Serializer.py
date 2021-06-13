@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from Centre.models import Vaccin, Lot, Creneau
+from Centre.models import Vaccin, Lot, Creneau, Patient
 
 
 class VaccinSerializer(serializers.ModelSerializer):
@@ -41,3 +41,14 @@ class UserSerializer(serializers.ModelSerializer):
                   'email',
                   'first_name',
                   'last_name')
+
+
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ('id',
+                  'user',
+                  'Nom',
+                  'Prenom',
+                  'MailPatient'
+                  )
